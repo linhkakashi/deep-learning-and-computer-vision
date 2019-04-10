@@ -48,4 +48,31 @@ Khi áp dụng phương pháp này thì sinh ra được khoảng 2000 vùng đc
 
 Vấn đề họ phải đối mặt nữa là việc thiếu dữ liệu có nhãn trong việc huấn luyện một mạng CNN lớn.
 Cách giải quyết của họ là:
-pre-training trên một tập dữ liệu lớn (ILSVRC) và sau đố fine-tuning lại trong miền cụ thể trên tập dữ liệu nhỏ (PASCAL) thì có thể huấn luyện đc một mô hình tốt khi có ít dữ liệu.
+pre-training trên một tập dữ liệu lớn (ILSVRC) và sau đó fine-tuning lại trong miền xác định trên tập dữ liệu nhỏ (PASCAL) thì có thể huấn luyện đc một mô hình tốt khi có ít dữ liệu.
+
+## Các modules với R-CNN
+Gồm có 3 modules chính:
+- Region proposals.
+- Trích xuất đặc trưng.
+- Phân lớp sử dụng linear SVMs.
+
+### 1. Region proposals
+
+Trong bài báo, để sinh ra các region proposals họ dùng 1 thuật toán gọi là [selective search](). Kết quả của bước này là từ một bức ảnh sẽ sinh ra đc các vùng chứa đối tượng để làm đầu vào cho thuật toán phân lớp.
+
+### 2. Trích xuất đặc trưng
+
+Từ mỗi region proposal mà đc tìm ở trên họ sẽ sử dụng CNN của ông Krizhevsky mà có trong thư viện Caffe để trích xuất ra một vector đặc trưng 4096 chiều. Với mạng CNN sẽ có 5 lớp convolution và 2 lớp fully connected.
+
+Như ảnh minh họa bên dưới.
+<img src="cnn-image-net.png" width="100%" />
+
+Tuy nhiên có vấn đề rằng, các region proposal có đa dạng các kích thước còn mạng CNN của Krizhevsky chỉ nhận đầu vào ảnh có kích thước 227x227 pixel. Thì phải resize lại tất cả region proposals về cùng kích thước 227x227.
+
+Các resize của họ là:
+1. Scale bức ảnh gốc sao cho vùng proposal có chiều dài hoặc chiều rộng có kích thước 227.
+2. Loại bỏ những vùng khác vùng proposal
+3. Kéo dãn chiều còn thiếu để đạt kích thước 227x227
+Lưu ý họ dung padding p=16 pixels.
+Như ảnh minh họa bên dưới.
+<img src="scale-image-rcnn.png" width="100%" />
