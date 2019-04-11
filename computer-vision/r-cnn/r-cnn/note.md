@@ -76,3 +76,34 @@ Các resize của họ là:
 Lưu ý họ dung padding p=16 pixels.
 Như ảnh minh họa bên dưới.
 <img src="scale-image-rcnn.png" width="100%" />
+
+## Kĩ thuật huấn luyện
+Như ở trên đã nói họ tập trung vào việc
+- Supervised pre-training
+- Domain-specific fine-tuning
+
+### 1. Supervised pre-training
+Họ tiền huấn luyện CNN trên một tập dữ liệu bổ trợ (ILSVRC2012) mà chỉ có nhãn chứ không có bounding-box. việc pre-training nãy họ sử dụng thư viện của Caffe.
+
+### 2. Domain-specific fine-tuning
+Để cho CNN mà có thể thực hiện nhiệm vụ mới là detect trên miền mới là region proposal thì họ tiếp tục huấn luyện mô hình chỉ trên region proposal. Với những region proposal >= 0.5 IOU với ground truth box thì đc coi là positive còn lại thì là negative.
+
+Tham số learning rate họ chọn là 0.001.
+Và tạo mini-batch với 32 positive window và 96 backgound window.
+
+## Những nghiên cứu mà tác giả cắt bỏ
+
+### 1. Hiệu quả của từng lớp mà không fine-tuning
+
+Để biết được lớp nào là quan trọng cho hiệu quả của detection thì tác giả đã phân tích trên 3 lớp cuối của mạng CNN. (1 lớp pool, và 2 lớp fully-connected)
+
+Kết quả thu được như bên dưới.
+<img src="detection-avg.png" width="100%" />
+
+3 hàng đầu tiên là kết quả từng lớp mafko fine-tuning. Thấy rằng lớp các đặc trưng lớp fc7 tổng quát hóa kém hơn các đặc trưng lớp fc6. Việc thêm lớp 6 và 7 dường như cũng ko nâng kết quả lên là bao thậm chí còn tệ hơn.
+=> Phần lớn khả năng biểu diễn của CNN đến từ các lớp convolution hơn là từ các lớp fully-connected.
+
+### 2. Hiệu quả của từng lớp với việc fine-tuning.
+
+Kết quả là hàng (4-6) ở bảng bên trên. Ta tahaays rằng việc fine-tuning đã làm tăng mAP lên 8% so với 46.2% của việc không fine-tuning. Hiệu quả tăng mạnh ở lớp fc6, fc7 hơn là ở pool5.
+=> các đặc trưng được học ở lớp pool5 là tổng quát, còn phần lớn sự cải thiện đạt được từ việc học phân lớp trong miền cụ thể.
